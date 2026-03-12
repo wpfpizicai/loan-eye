@@ -11,6 +11,8 @@ COMPETITORS = [
     {"name": "微粒贷", "keywords": ["微粒贷", "微粒贷额度", "微粒贷下款"], "category": CompetitorCategory.core},
     {"name": "百度有钱花", "keywords": ["有钱花", "百度有钱花", "度小满"], "category": CompetitorCategory.core},
     {"name": "美团借钱", "keywords": ["美团借钱", "美团月付"], "category": CompetitorCategory.core},
+    {"name": "借呗", "keywords": ["借呗", "支付宝借呗", "借呗额度", "借呗利率"], "category": CompetitorCategory.core},
+    {"name": "京东金条", "keywords": ["京东金条", "金条借款", "金条额度", "金条利率"], "category": CompetitorCategory.core},
     {"name": "行业词", "keywords": ["现金贷", "小额贷款", "网络借贷", "借钱app", "信用贷款", "消费贷"], "category": CompetitorCategory.industry},
 ]
 

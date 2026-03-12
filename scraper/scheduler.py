@@ -1,4 +1,5 @@
 # scraper/scheduler.py
+import asyncio
 import logging
 from datetime import datetime
 from sqlalchemy import select
@@ -47,18 +48,26 @@ class ScrapeScheduler:
                 await self._upsert_note(db, competitor_id, keyword, note_data)
             await db.commit()
 
+        # Wait before comment fetching to avoid rate limiting after intensive note scraping
+        if notes:
+            logger.info(f"[Scheduler] Waiting 30s before fetching comments for {keyword}...")
+            await asyncio.sleep(30)
+
         for note_data in notes:
             try:
                 comments = await self.crawler.get_comments(
                     note_data.note_id,
+                    xsec_token=note_data.xsec_token,
                     max_count=settings.scrape_comments_per_note
                 )
                 async with AsyncSessionLocal() as db:
                     for comment_data in comments:
                         await self._upsert_comment(db, comment_data)
                     await db.commit()
+                await asyncio.sleep(3)
             except Exception as e:
                 logger.error(f"[Scheduler] Failed getting comments for {note_data.note_id}: {e}")
+                await asyncio.sleep(5)
 
     async def _upsert_note(self, db, competitor_id: str, keyword: str, data: NoteData):
         stmt = pg_insert(Note).values(
@@ -68,7 +77,7 @@ class ScrapeScheduler:
             title=data.title,
             content=data.content,
             author=data.author,
-            publish_time=data.publish_time,
+            publish_time=data.publish_time.replace(tzinfo=None) if data.publish_time else None,
             likes=data.likes,
             comments=data.comments,
             collects=data.collects,
@@ -88,6 +97,6 @@ class ScrapeScheduler:
             content=data.content,
             author=data.author,
             likes=data.likes,
-            publish_time=data.publish_time,
+            publish_time=data.publish_time.replace(tzinfo=None) if data.publish_time else None,
         ).on_conflict_do_nothing(index_elements=["comment_id"])
         await db.execute(stmt)
