@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     scrape_comments_per_note: int = 100
     hot_note_multiplier: float = 3.0
     sentiment_model: str = "uer/roberta-base-finetuned-jd-binary-chinese"
+    wandou_app_key: str = ""
+    ip_proxy_pool_count: int = 5
 
     class Config:
         env_file = ".env"

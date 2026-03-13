@@ -8,8 +8,13 @@ logger = logging.getLogger(__name__)
 
 SentimentLabel = Literal["positive", "negative", "neutral"]
 
-# 模型标签映射（jd 模型输出 LABEL_0=negative, LABEL_1=positive）
-_LABEL_MAP = {"LABEL_0": "negative", "LABEL_1": "positive"}
+# 模型标签映射（uer/roberta-base-finetuned-jd-binary-chinese 实际输出标签）
+_LABEL_MAP = {
+    "positive (stars 4 and 5)": "positive",
+    "negative (stars 1, 2 and 3)": "negative",
+    "LABEL_0": "negative",  # 兼容 LABEL_X 格式
+    "LABEL_1": "positive",
+}
 
 
 class SentimentAnalyzer:

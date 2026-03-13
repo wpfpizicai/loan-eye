@@ -31,7 +31,7 @@ _MC_DEFAULTS = {
     "CDP_HEADLESS": True,
     "ENABLE_IP_PROXY": False,
     "IP_PROXY_POOL_COUNT": 0,
-    "CACHE_TYPE_REDIS": "redis",
+    "CACHE_TYPE_REDIS": "memory",   # 用内存缓存，不依赖 Redis
     "CACHE_TYPE_MEMORY": "memory",
     "LOGIN_TYPE": "cookie",
     "COOKIES": "",
@@ -60,7 +60,6 @@ def _pre_register(pkg_name: str, pkg_path: Path):
 
 _pre_register("media_platform", _MC_PATH / "media_platform")
 _pre_register("media_platform.xhs", _MC_PATH / "media_platform" / "xhs")
-_pre_register("proxy", _MC_PATH / "proxy")
 
 
 # ── 数据结构 ─────────────────────────────────────────────────────────────────
@@ -190,6 +189,20 @@ class XhsCrawler:
             await self._context.cookies()
         )
 
+        # 初始化代理池（可选）
+        proxy_ip_pool = None
+        if settings.wandou_app_key:
+            from proxy.proxy_ip_pool import ProxyIpPool
+            from proxy.providers.wandou_http_proxy import WanDouHttpProxy
+            provider = WanDouHttpProxy(app_key=settings.wandou_app_key)
+            proxy_ip_pool = ProxyIpPool(
+                ip_pool_count=settings.ip_proxy_pool_count,
+                enable_validate_ip=False,
+                ip_provider=provider,
+            )
+            await proxy_ip_pool.load_proxies()
+            logger.info(f"[XhsCrawler] Proxy pool loaded with {len(proxy_ip_pool.proxy_list)} IPs")
+
         self._client = XiaoHongShuClient(
             headers={
                 "accept": "application/json, text/plain, */*",
@@ -206,6 +219,7 @@ class XhsCrawler:
             },
             playwright_page=self._page,
             cookie_dict=full_cookie_dict,
+            proxy_ip_pool=proxy_ip_pool,
         )
         logger.info("[XhsCrawler] Client initialized")
 
